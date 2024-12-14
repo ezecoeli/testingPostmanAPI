@@ -1,0 +1,468 @@
+{
+	"info": {
+		"_postman_id": "54f0c819-0c4e-4d9a-80fd-aecbea91fbb8",
+		"name": "API test",
+		"description": "# **Resumen del Proyecto**\n\nEste proyecto tiene como objetivo demostrar el uso de Postman para realizar pruebas automatizadas sobre la API de [The Dog API](https://thedogapi.com/). A continuación, se describen los pasos realizados, las configuraciones implementadas y las pruebas creadas para validar diferentes aspectos de la API.\n\n---\n\n## **Configuraciones Realizadas**\n\n### **1\\. Variables de Entorno**\n\n- Configuramos variables de entorno para gestionar dinámicamente valores.\n    \n- Estas variables permiten reutilizar valores sin necesidad de configurarlos manualmente en cada solicitud.\n    \n\n### **2\\. Pre-request Scripts**\n\n- Implementamos scripts previos para generar datos dinámicos y para configurar headers de autenticación mediante la clave de API.\n    \n\n### **3\\. Scripts de Prueba**\n\n- Añadimos scripts de validación para verificar las respuestas de la API:\n    - Validación de códigos de estado.\n        \n    - Verificación de propiedades en las respuestas JSON.\n        \n    - Almacenamiento de valores dinámicos para usarlos en solicitudes posteriores.\n        \n\n---\n\n## **Pruebas Implementadas**\n\n### **1\\. Solicitudes Básicas**\n\n- **GET /v1/breeds**: Obtenemos una lista de razas y validamos:\n    \n    - Código de estado (200).\n        \n    - Que cada raza tenga un `id` y un `name`.\n        \n    - Almacenamos el `breed_id` de la primera raza para futuras pruebas.\n        \n- **POST /v1/votes**: Creamos un voto dinámico utilizando valores generados previamente y validamos:\n    \n    - Código de estado (201).\n        \n    - Que la respuesta contenga un `id` del voto creado.\n        \n- **DELETE /v1/votes/{vote_id}**: Eliminamos un voto previamente creado y verificamos:\n    \n    - Código de estado (200).\n        \n    - Confirmación del éxito en la eliminación.\n        \n\n### **2\\. Pruebas con Datos Dinámicos**\n\n- Usamos scripts para extraer valores dinámicos de las respuestas (por ejemplo, `breed_id`) y configurarlos como variables de entorno para solicitudes posteriores.\n    \n\n### **3\\. Data-Driven Testing**\n\n- Integramos un archivo JSON con datos de prueba (`data.json`) para realizar múltiples solicitudes `POST /v1/votes` con diferentes valores de entrada.\n    \n- Esto permitió validar la funcionalidad de la API con diferentes escenarios.\n    \n\n### **4\\. Validaciones de Rendimiento**\n\n- Añadimos pruebas globales para medir el tiempo de respuesta de cada solicitud, asegurando que los tiempos sean menores a un umbral definido (600 ms).\n    \n\n---\n\n## **Extensiones Avanzadas**\n\n### **1\\. Organización**\n\n- Agrupamos las solicitudes en carpetas lógicas para mantener una estructura clara y fácil de navegar.\n    \n\n### **2\\. Reportes Consolidados**\n\n- Recopilamos tiempos de respuesta y resultados de pruebas en variables globales para generar métricas como tiempo promedio de respuesta.\n    \n\n### **3\\. Integración con CI/CD**\n\n- La colección puede ejecutarse automáticamente usando **Newman** para integrarla en pipelines de pruebas.\n    \n\n---",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38746291"
+	},
+	"item": [
+		{
+			"name": "GET Endpoints",
+			"item": [
+				{
+					"name": "Breeds list",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Validar que la respuesta tiene un código 200\r",
+									"pm.test(\"La respuesta tiene código 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"\r",
+									"// Parsear la respuesta JSON\r",
+									"const breeds = pm.response.json();\r",
+									"\r",
+									"// Validar que la respuesta contiene razas\r",
+									"pm.test(\"La respuesta contiene razas\", function () {\r",
+									"    pm.expect(breeds.length).to.be.above(0);\r",
+									"});\r",
+									"\r",
+									"// Validar que cada raza tiene un ID y un nombre\r",
+									"pm.test(\"Todas las razas tienen ID y nombre\", function () {\r",
+									"    breeds.forEach(breed => {\r",
+									"        pm.expect(breed).to.have.property(\"id\");\r",
+									"        pm.expect(breed).to.have.property(\"name\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"// Guardar el ID de la primera raza en una variable de entorno\r",
+									"pm.environment.set(\"breed_id\", breeds[0].id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.thedogapi.com/v1/breeds",
+							"protocol": "https",
+							"host": [
+								"api",
+								"thedogapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"breeds"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search images",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Validar que la respuesta tiene un código 200\r",
+									"pm.test(\"La respuesta tiene código 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Validar que hay imágenes en la respuesta\r",
+									"const images = pm.response.json();\r",
+									"pm.test(\"La respuesta contiene imágenes\", function () {\r",
+									"    pm.expect(images.length).to.be.above(0);\r",
+									"});\r",
+									"\r",
+									"// Validar que cada imagen tiene un ID y una URL\r",
+									"pm.test(\"Todas las imágenes tienen ID y URL\", function () {\r",
+									"    images.forEach(image => {\r",
+									"        pm.expect(image).to.have.property(\"id\");\r",
+									"        pm.expect(image).to.have.property(\"url\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"// Guardar el ID de la primera imagen en una variable de entorno\r",
+									"pm.environment.set(\"image_id\", images[0].id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://api.thedogapi.com/v1/images/search?breed_ids={{breed_id}}",
+							"protocol": "https",
+							"host": [
+								"api",
+								"thedogapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"images",
+								"search"
+							],
+							"query": [
+								{
+									"key": "breed_ids",
+									"value": "{{breed_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Favourites lists",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Validar que la respuesta tiene un código 200\r",
+									"pm.test(\"La respuesta tiene código 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// Validar que la imagen agregada aparece en favoritos\r",
+									"const favourites = pm.response.json();\r",
+									"pm.test(\"La imagen agregada está en favoritos\", function () {\r",
+									"    const addedFavourite = favourites.find(fav => fav.id === pm.environment.get(\"favourite_id\"));\r",
+									"    pm.expect(addedFavourite).to.exist;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://api.thedogapi.com/v1/favourites",
+							"protocol": "https",
+							"host": [
+								"api",
+								"thedogapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"favourites"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "POST Endpoints",
+			"item": [
+				{
+					"name": "Votes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"La respuesta tiene código 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"La respuesta contiene el ID del voto\", function () {\r",
+									"    const response = pm.response.json();\r",
+									"    pm.expect(response).to.have.property(\"id\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"\r",
+									"const randomValue = Math.random() > 0.5 ? 1 : 0;\r",
+									"pm.environment.set(\"vote_value\", randomValue);\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_key}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n  \"image_id\": \"abc123\",\r\n  \"value\": {{vote_value}}\r\n}\r\n\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.thedogapi.com/v1/votes",
+							"protocol": "https",
+							"host": [
+								"api",
+								"thedogapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"votes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add image to favourites",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Validar que la respuesta tiene un código 200 o 201\r",
+									"pm.test(\"La respuesta tiene código 200 o 201\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+									"});\r",
+									"\r",
+									"// Validar que la respuesta contiene un ID de favorito\r",
+									"const response = pm.response.json();\r",
+									"pm.test(\"La respuesta contiene un ID de favorito\", function () {\r",
+									"    pm.expect(response).to.have.property(\"id\");\r",
+									"});\r",
+									"\r",
+									"// Guardar el ID del favorito en una variable de entorno\r",
+									"pm.environment.set(\"favourite_id\", response.id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_key}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"image_id\": \"{{image_id}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.thedogapi.com/v1/favourites",
+							"protocol": "https",
+							"host": [
+								"api",
+								"thedogapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"favourites"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DELETE",
+			"item": [
+				{
+					"name": "Delete image",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Validar que la respuesta tiene un código 200 o 204\r",
+									"pm.test(\"La respuesta tiene código 200 o 204\", function () {\r",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 204]);\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_key}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://api.thedogapi.com/v1/favourites/{{favourite_id}}",
+							"protocol": "https",
+							"host": [
+								"api",
+								"thedogapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"favourites",
+								"{{favourite_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "key",
+				"value": "",
+				"type": "string"
+			},
+			{
+				"key": "value",
+				"value": "",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"// Verifica que el tiempo de respuesta esté dentro de un límite aceptable (por ejemplo, 500 ms)\r",
+					"pm.test(\"El tiempo de respuesta es menor a 600 ms\", function () {\r",
+					"    pm.expect(responseTime).to.be.below(600);\r",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "api_key",
+			"value": "live_d49AbBcBO79rkwzF7wZ9iQlZxFQWdWZ5rX2F8COWsxpZITLdkBxdrrdGMDWgph7y",
+			"type": "string"
+		}
+	]
+}
